@@ -2,14 +2,15 @@ from typing import Dict
 
 import blspy
 
-from src.full_node.bundle_tools import best_solution_program
-from src.types.blockchain_format.coin import Coin
-from src.types.blockchain_format.program import Program, SerializedProgram
-from src.types.coin_solution import CoinSolution
-from src.types.condition_opcodes import ConditionOpcode
-from src.types.spend_bundle import SpendBundle
-from src.util.ints import uint64
-from src.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle import puzzle_for_pk, solution_for_conditions
+from chia.full_node.bundle_tools import simple_solution_generator
+from chia.types.blockchain_format.coin import Coin
+from chia.types.blockchain_format.program import Program
+from chia.types.coin_solution import CoinSolution
+from chia.types.condition_opcodes import ConditionOpcode
+from chia.types.generator_types import BlockGenerator
+from chia.types.spend_bundle import SpendBundle
+from chia.util.ints import uint64
+from chia.wallet.puzzles.p2_delegated_puzzle_or_hidden_puzzle import puzzle_for_pk, solution_for_conditions
 
 GROUP_ORDER = 0x73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001
 
@@ -45,7 +46,7 @@ def conditions_for_payment(coin) -> Program:
     return Program.to([[ConditionOpcode.CREATE_COIN, new_puzzle_hash, coin.amount]])
 
 
-def make_block_generator(count: int) -> SerializedProgram:
+def make_spend_bundle(count: int) -> SpendBundle:
     puzzle_hash_db: Dict = dict()
     coins = [make_fake_coin(_, puzzle_hash_db) for _ in range(count)]
 
@@ -58,4 +59,9 @@ def make_block_generator(count: int) -> SerializedProgram:
         coin_solutions.append(coin_solution)
 
     spend_bundle = SpendBundle(coin_solutions, blspy.G2Element())
-    return best_solution_program(spend_bundle)
+    return spend_bundle
+
+
+def make_block_generator(count: int) -> BlockGenerator:
+    spend_bundle = make_spend_bundle(count)
+    return simple_solution_generator(spend_bundle)

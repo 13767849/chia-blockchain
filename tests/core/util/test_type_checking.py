@@ -2,8 +2,8 @@ import unittest
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
-from src.util.ints import uint8
-from src.util.type_checking import is_type_List, is_type_SpecificOptional, strictdataclass
+from chia.util.ints import uint8
+from chia.util.type_checking import is_type_List, is_type_SpecificOptional, strictdataclass
 
 
 class TestIsTypeList(unittest.TestCase):
@@ -89,14 +89,6 @@ class TestStrictClass(unittest.TestCase):
 
         good = TestClass(12, None, 13, None)
         assert good
-
-    def test_StrictDataClassEmpty(self):
-        @dataclass(frozen=True)
-        @strictdataclass
-        class A:
-            pass
-
-        A()
 
 
 if __name__ == "__main__":

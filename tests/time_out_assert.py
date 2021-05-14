@@ -3,7 +3,7 @@ import logging
 import time
 from typing import Callable
 
-from src.protocols.protocol_message_types import ProtocolMessageTypes
+from chia.protocols.protocol_message_types import ProtocolMessageTypes
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ async def time_out_assert_custom_interval(timeout: int, interval, function, valu
         else:
             f_res = function(*args, **kwargs)
         if value == f_res:
-            return
+            return None
         await asyncio.sleep(interval)
     assert False
 
@@ -33,7 +33,7 @@ async def time_out_assert_not_none(timeout: int, function, *args, **kwargs):
         else:
             f_res = function(*args, **kwargs)
         if f_res is not None:
-            return
+            return None
         await asyncio.sleep(0.05)
     assert False
 

@@ -6,6 +6,165 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project does not yet adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 for setuptools_scm/PEP 440 reasons.
 
+## 1.1.5 Chia Blockchain 2021-05-09
+
+### Fixed
+
+- We were not checking for negative values in the uint64 constructor. Therefore coins with negative values were added to the mempool. These blocks passed validation, but they did not get added into the blockchain due to negative values not serializing in uint64. Farmers making these blocks would make blocks that did not make it into or advance the chain, so the blockchain slowed down starting at block 255518 around 6:35AM PDT 5/9/2021. The fix adds a check in the mempool and block validation, and does not disconnect peers who send these invalid blocks (any peer 1.1.4 or older), making this update not mandatory but is recommended. Users not updating might see their blocks get rejected from other peers. Upgraded nodes will show an error when they encounter an old node trying to send an invalid block. This "Consensus error 124..." can be safely ignored.
+
+## 1.1.4 Chia Blockchain 2021-05-04
+
+### Changed
+
+- Secret wallet key is hidden by default in `chia keys show`. Use `chia keys show --show-mnemonic-seed` for private keys.
+- Performance improvement while parsing variable length field in transaction blocks.
+
+### Fixed
+
+- Spends are now sorted in the mempool by fee/cost.
+- Resolved pending transaction issue during reorgs.
+- Fixed bug in message send retry logic.
+- Two issues with processing Weight Proofs during syncing while farming.
+- Fixed a bug in the outgoing rate control logic that could prevent messages being sent.
+
+## 1.1.3 Chia Blockchain 2021-05-01
+
+### Added
+
+- Significant speed improvements have been added to the Node during P2P operations. This is mostly a performance improvement to make sure there is plenty of overhead in Node for transaction processing. Smaller machines like the Pi 4 are strongly advised to update to this release before Monday 5/3/21 at 10AM PDT when transactions start.
+- Significant syncing speed improvements have been added. However, there is a lot of low hanging fruit to continue to increase overall chain sync speed in subsequent releases.
+
+### Changed
+
+- We now require node 12.x to build the GUI. Installers have been building using node 12.x for quite some time.
+- Node will now farm while syncing.
+- We changed chialisp singletons to take a puzzlehash as its origin. We also updated the DID wallet to use this.
+- Transactions are now cached for 10 minutes in mempool to retry if there is a failure of a spending attempt.
+- Thank you to @Chida82 who made the log rotation count fully configurable. Apologies to him for not initially being included here.
+- Thank you to @fiveangle for making install.sh more resilient across python installations.
+- Standard transactions now all have announcements.
+- VDF verification during sync and normal operations are now cached to enhance node performance.
+- Target peer count has been increased from 60 to 80 to increase the number of peer Nodes available to connect to. Outbound connections were lowered from 10 to 8.
+- The streamables class has had significant performance improvements.
+- If a proof of space lookup takes longer than 5 seconds we will now log an error at WARNING level.
+- Allow configuration of the plot loading interval (default is 2 minutes) in config.yaml.
+- CLI wallet UI was improved and shows syncing status of wallet.
+- @martomi added logging of added coins back.
+- Thank you to @aisk for additional type checking.
+- @aisk added error checking in bech32m
+- Chialisp programs now remained serialized in Node for better performance.
+- Mempool is now set to be 50 times the single block size.
+- Mitigate 1-3 mojo dust attacks.
+- CLI now switches to EiB for netspace display as appropriate.
+
+### Fixed
+
+- We fixed excess memory use when displaying plot logs in GUI. This was causing the GUI application to fail in many "fun" ways after plotting a lot of plots in parallel.
+- Fixed plot update issues in the GUI.
+- Long syncing will now correctly show "Syncing" around the application.
+- Nonce collisions in request IDs is fixed.
+- Some duplicate plots were not being caught and logged by harvester on loading.
+- We have removed many places where Node was making duplicate requests of other nodes.
+- Daemon now waits for services to end to attempt to avoid zombie processes.
+- Node is less likely to lose sync due to state inconsistency.
+- A large thank you to @sargonas for diagnosing why so many technical support questions were flooding GitHub issues, PRing a fix, and mass migrating issues to Discussions.
+- Thanks to @jeolcho for fixing a bug in full_node_rpc_api.py.
+- Thanks @antoniobg for a typo fix in keychain.py.
+- Thanks to @altendky for catching a Copyright date error.
+
+## 1.1.2 Chia Blockchain 2021-04-24
+
+### Changed
+
+- Weight proof time outs have been increased from 3 minutes to 6 minutes.
+
+### Fixed
+
+- When attempting to sync, connections could accidentally disconnect for rate limiting reasons. This was causing many to not be able to sync.
+- Some temp files were not being closed during GUI plotting.
+
+## 1.1.1 Chia Blockchain 2021-04-21
+
+### Added
+
+- This is a bug fix release for 1.1.0. It is not required to upgrade from 1.1.0 if you are not experiencing the specific issue that it addresses. You are required to upgrade from any 1.0.x version before Monday evening PDT to continue farming.
+
+### Changed
+
+- Logging now includes year, month, and date. Thanks and apologies for not tipping the hat sooner to @alfonsoperez for the PR.
+
+### Fixed
+
+- Changes were made in 1.1.0 to make sure that even out of order signage points were found and responded to by as many farmers as possible. That change lead to a situation where the harvester could thrash on the same cached signage point.
+
+## 1.1.0 Chia Blockchain 2021-04-21
+
+### Added
+
+- This fork release includes full transaction support for the Chia Blockchain. Transactions are still disabled until 5/3/2021 at 10:00AM PDT. It is hard to overstate how much work and clean up went into this release.
+- This is the 1.0 release of Chialisp. Much has been massaged and finalized. We will be putting a focus on updating and expanding the documentation on [chialisp.com](https://chialisp.com) shortly.
+- Farmers now compress blocks using code snippets from previous blocks. This saves storage space and allows larger smart coins to have a library of sorts on chain.
+- We now support offline signing of coins.
+- You can now ask for an offset wallet receive address in the cli. Thanks @jespino.
+- When adding plots we attempt to detect a duplicate and not load it.
+
+### Changed
+
+- We have changed how transactions will unlock from a blockheight to a timestamp. As noted above that timestamp is 5/3/2021 at 10AM PDT.
+- We have temporarily disabled the "Delete Plots" button in the Windows GUI as we are still working on debugging upstream issues that are causing it.
+- There are various optimizations in node and wallet to increase sync speed and lower work to stay in sync. We expect to add additional significant performance improvements in the next release also.
+- Transactions now add the agg_sig_me of the genesis block for chain compatibility reasons.
+- Wallet is far less chatty to unload the classic introducers. DNS introducers will be coming shortly to replace the classic introducers that are still deployed.
+- Netspace is now calculated across the previous 4068 blocks (generally the past 24 hours) in the GUI and cli.
+
+### Fixed
+
+- Performance of streamable has been increased, which should help the full node use less CPU - especially when syncing.
+- Timelords are now successfully infusing almost 100% of blocks.
+- Harvester should be a bit more tolerant of some bad plots.
+
+## 1.0.5 Chia Blockchain 2021-04-14
+
+### Added
+
+- This is a maintenance release for 1.0.4 to fix a few mostly cosmetic issues. Please refer to the 1.0.4 notes for the substantive plotting changes - for example - in that release.
+
+### Changed
+
+- The GUI now calls it an Estimated Time to Win and has enhanced explanations in the tool tip that the estimated time is often not be the actual time. We have some additional improvements we plan to make here in future releases.
+- Development installers now handle semver development versions correctly.
+
+### Fixed
+
+- Temp space sizes needed for k = 33 and higher were accidentally under-reported. The values we have placed into the GUI may be conservative in being too large and appreciate feedback from the community on the new optimal temp space needed and RAM choices.
+- The GUI plotting progress bar was reaching 100% too early. Thanks to @davidbb for the PR.
+- Help -> About was blank.
+- Our estimate for k=32 was about 0.4GiB too low in some cases.
+- Building the GUI in especially ARM64 Linux was painful enough to be considered broken.
+## 1.0.4 Chia Blockchain 2021-04-12
+
+### Added
+
+- Starting approximately April 21, 2021, the GUI will notify you that this version will stop working at block height 193,536 and will persistently warn you from that block on that you can not use this version (or any earlier version) to farm. This is to support the upgrade to the transaction fork.
+- We now have translations for Brazilian Portuguese, Australian English, and Pirate. Thanks to @fsavaget, @darkflare, @maahhh, @harold_257, @kontin, and @GunnlaugurCalvi. Yarr - don't be losing your 24 word treasure map...
+
+### Changed
+
+- The plotter in bitfield mode is much improved in plotting speed (~15% faster than in 1.0.3), now requires 28% less temporary space (238.3 GiB/256 GB), and now uses its maximum memory in phase 1 and only needs 3389MiB for optimal sorting of a k32. Total writes should also be down by about 20%. On almost all machines we expect bitfield to be as fast or faster. For CPUs that predate the [Nehalem architecture](https://en.wikipedia.org/wiki/Nehalem_(microarchitecture)), bitfield plotting will not work and you will need to use no bitfield. Those CPUs were generally designed before 2010.
+- The `src` directory in chia-blockchain has been changed to `chia` to avoid namespace collisions.
+- GUI install builds have been simplified to rely on one `.spec` file in `chia/`
+- The weight proof timeout can now be configured in config.yaml.
+- Peer discovery is now retried more often after you receive initial peers.
+
+### Fixed
+
+- We have made significant improvements and bug fixes to stop blockchain and wallet database corruption issues.
+- We now pass the environment into the Daemon and this should solve some Windows and MacOS startup bugs.
+- The ARM64 .deb installer will now work well on Raspberry Pi OS 64 bit and Ubuntu 18.04 LTS or newer.
+- We have made improvements in weight proof generation and saving.
+- Wallet start up would have a race condition that output a harmless error on startup.
+- Thanks for a typo fix from @alfonsoperez.
+
 ## 1.0.3 Chia Blockchain 2021-03-30
 
 ### Added
@@ -16,7 +175,7 @@ for setuptools_scm/PEP 440 reasons.
 ### Fixed
 
 - An incorrect merge brought in unreleased features and broke `chia keys`.
-- Omitted from the 1.0.2 changelog, we fixed one crash in harvester with the release of chaipos 1.0.0 as well.
+- Omitted from the 1.0.2 changelog, we fixed one crash in harvester with the release of chiapos 1.0.0 as well.
 
 ## 1.0.2 Chia Blockchain 2021-03-30
 

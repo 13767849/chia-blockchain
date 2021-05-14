@@ -21,7 +21,6 @@ else
     Write-Output "miniupnpc download successful."
 }
 
-
 Write-Output "   ---"
 Write-Output "Create venv - python3.7 or 3.8 is required in PATH"
 Write-Output "   ---"
@@ -66,7 +65,7 @@ pip install --no-index --find-links=.\win_build\ chia-blockchain
 Write-Output "   ---"
 Write-Output "Use pyinstaller to create chia .exe's"
 Write-Output "   ---"
-$SPEC_FILE = (python -c 'import src; print(src.PYINSTALLER_SPEC_PATH)') -join "`n"
+$SPEC_FILE = (python -c 'import chia; print(chia.PYINSTALLER_SPEC_PATH)') -join "`n"
 pyinstaller --log-level INFO $SPEC_FILE
 
 Write-Output "   ---"
